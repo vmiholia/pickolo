@@ -41,6 +41,7 @@ export interface Facility {
   latitude?: number;
   longitude?: number;
   google_maps_url?: string;
+  currency?: string;
 }
 
 export interface Court {

@@ -1,28 +1,26 @@
-from fastapi import FastAPI, Depends, HTTPException, status
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from database import SessionLocal, engine
-import models, schemas
+from sqlalchemy import or_, desc
+from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime
 
-app = FastAPI(title="Pickleheads Clone API")
+import models, schemas
+from database import engine, get_db
+
+models.Base.metadata.create_all(bind=engine)
+
+app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Dependency
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
+# User Endpoints
 @app.post("/login", response_model=schemas.User)
 def login(user_id: str, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == user_id).first()
@@ -35,22 +33,30 @@ def update_user(user_id: str, user_update: schemas.UserUpdate, db: Session = Dep
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    user.skill_level = user_update.skill_level
+    
+    update_data = user_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(user, key, value)
+        
     db.commit()
     db.refresh(user)
     return user
 
-@app.get("/users/{user_id}/schedule")
+@app.get("/users/{user_id}/schedule", response_model=schemas.UserSchedule)
 def get_user_schedule(user_id: str, db: Session = Depends(get_db)):
     bookings = db.query(models.Booking).filter(models.Booking.user_id == user_id).all()
-    games = db.query(models.Game).join(models.Participation).filter(
-        models.Participation.user_id == user_id
-    ).all()
-    return {
-        "bookings": bookings,
-        "games": games
-    }
+    
+    participations = db.query(models.Participation).filter(models.Participation.user_id == user_id).all()
+    game_ids = [p.game_id for p in participations]
+    games = db.query(models.Game).filter(models.Game.id.in_(game_ids)).all() if game_ids else []
+    
+    return {"bookings": bookings, "games": games}
 
+@app.get("/leaderboard", response_model=List[schemas.User])
+def get_leaderboard(db: Session = Depends(get_db)):
+    return db.query(models.User).filter(models.User.role == models.UserRole.PLAYER).order_by(desc(models.User.points)).all()
+
+# Facilities & Courts
 @app.get("/facilities", response_model=List[schemas.Facility])
 def get_facilities(search: Optional[str] = None, db: Session = Depends(get_db)):
     query = db.query(models.Facility)
@@ -74,7 +80,7 @@ def update_facility(facility_id: int, facility_update: schemas.FacilityUpdate, d
     update_data = facility_update.dict(exclude_unset=True)
     for key, value in update_data.items():
         setattr(facility, key, value)
-    
+        
     db.commit()
     db.refresh(facility)
     return facility
@@ -91,38 +97,41 @@ def create_court(court: schemas.CourtCreate, db: Session = Depends(get_db)):
     db.refresh(db_court)
     return db_court
 
+# Bookings
 @app.get("/facilities/{facility_id}/bookings", response_model=List[schemas.Booking])
-def get_bookings(facility_id: int, date: str, db: Session = Depends(get_db)):
-    try:
-        dt = datetime.strptime(date, "%Y-%m-%d")
-    except ValueError:
-         raise HTTPException(status_code=400, detail="Invalid date format, use YYYY-MM-DD")
+def get_bookings(facility_id: int, date: str = Query(...), db: Session = Depends(get_db)):
+    date_obj = datetime.strptime(date, "%Y-%m-%d").date()
     
-    start_of_day = dt
-    end_of_day = dt + timedelta(days=1)
+    courts = db.query(models.Court).filter(models.Court.facility_id == facility_id).all()
+    court_ids = [c.id for c in courts]
     
-    return db.query(models.Booking).join(models.Court).filter(
-        models.Court.facility_id == facility_id,
-        models.Booking.start_time >= start_of_day,
-        models.Booking.start_time < end_of_day
+    if not court_ids:
+        return []
+
+    bookings = db.query(models.Booking).filter(
+        models.Booking.court_id.in_(court_ids)
     ).all()
+    
+    return [b for b in bookings if b.start_time.date() == date_obj]
 
 @app.post("/bookings", response_model=schemas.Booking)
 def create_booking(booking: schemas.BookingCreate, db: Session = Depends(get_db)):
-    # Check if court is booked at that time
-    existing = db.query(models.Booking).filter(
-        models.Booking.court_id == booking.court_id,
-        models.Booking.start_time == booking.start_time
-    ).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="Court already booked for this hour")
-    
     db_booking = models.Booking(**booking.dict())
     db.add(db_booking)
     db.commit()
     db.refresh(db_booking)
     return db_booking
 
+@app.delete("/bookings/{booking_id}")
+def delete_booking(booking_id: int, db: Session = Depends(get_db)):
+    db_booking = db.query(models.Booking).filter(models.Booking.id == booking_id).first()
+    if not db_booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    db.delete(db_booking)
+    db.commit()
+    return {"message": "Booking deleted"}
+
+# Games (Open Play)
 @app.get("/games", response_model=List[schemas.Game])
 def get_games(skill_level: Optional[models.SkillLevel] = None, db: Session = Depends(get_db)):
     query = db.query(models.Game)
@@ -138,35 +147,63 @@ def create_game(game: schemas.GameCreate, db: Session = Depends(get_db)):
     db.refresh(db_game)
     return db_game
 
+@app.delete("/games/{game_id}")
+def delete_game(game_id: int, db: Session = Depends(get_db)):
+    db_game = db.query(models.Game).filter(models.Game.id == game_id).first()
+    if not db_game:
+        raise HTTPException(status_code=404, detail="Game not found")
+    db.delete(db_game)
+    db.commit()
+    return {"message": "Game deleted"}
+
+@app.put("/games/{game_id}/score")
+def update_game_score(game_id: int, score: schemas.GameUpdateScore, db: Session = Depends(get_db)):
+    db_game = db.query(models.Game).filter(models.Game.id == game_id).first()
+    if not db_game:
+        raise HTTPException(status_code=404, detail="Game not found")
+    db_game.score_team_a = score.score_team_a
+    db_game.score_team_b = score.score_team_b
+    db_game.is_finished = True
+    db.commit()
+    return {"message": "Score updated"}
+
 @app.post("/games/{game_id}/join")
-def join_game(game_id: int, user_id: str, db: Session = Depends(get_db)):
-    # Check if already joined
+def join_game(game_id: int, user_id: str = Query(...), db: Session = Depends(get_db)):
+    game = db.query(models.Game).filter(models.Game.id == game_id).first()
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found")
+        
     existing = db.query(models.Participation).filter(
         models.Participation.game_id == game_id,
         models.Participation.user_id == user_id
     ).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="Already joined this game")
     
-    participation = models.Participation(user_id=user_id, game_id=game_id)
-    db.add(participation)
+    if existing:
+        raise HTTPException(status_code=400, detail="Already joined")
+        
+    part = models.Participation(user_id=user_id, game_id=game_id)
+    db.add(part)
     db.commit()
     return {"message": "Joined successfully"}
 
 @app.delete("/games/{game_id}/leave")
-def leave_game(game_id: int, user_id: str, db: Session = Depends(get_db)):
-    participation = db.query(models.Participation).filter(
+def leave_game(game_id: int, user_id: str = Query(...), db: Session = Depends(get_db)):
+    part = db.query(models.Participation).filter(
         models.Participation.game_id == game_id,
         models.Participation.user_id == user_id
     ).first()
-    if not participation:
-        raise HTTPException(status_code=404, detail="Participation not found")
-    db.delete(participation)
+    
+    if not part:
+        raise HTTPException(status_code=404, detail="Not joined")
+        
+    db.delete(part)
     db.commit()
-    return {"message": "Left game successfully"}
+    return {"message": "Left successfully"}
 
-@app.get("/games/{game_id}/participants")
+@app.get("/games/{game_id}/participants", response_model=List[schemas.User])
 def get_participants(game_id: int, db: Session = Depends(get_db)):
-    return db.query(models.User).join(models.Participation).filter(
-        models.Participation.game_id == game_id
-    ).all()
+    participations = db.query(models.Participation).filter(models.Participation.game_id == game_id).all()
+    user_ids = [p.user_id for p in participations]
+    if not user_ids:
+        return []
+    return db.query(models.User).filter(models.User.id.in_(user_ids)).all()
