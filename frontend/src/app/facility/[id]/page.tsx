@@ -44,6 +44,7 @@ import {
   TrendingUp,
   Activity,
   Zap,
+  Info,
   ChevronRight
 } from 'lucide-react';
 
@@ -69,8 +70,7 @@ function FacilityDetailContent({ params }: { params: Promise<{ id: string }> }) 
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   
-  // Timeline State
-  const [selectedCourtId, setSelectedCourtId] = useState<number | null>(null);
+  // Timeline State - No more court tabs, showing week view
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
 
   // Settings State
@@ -88,7 +88,6 @@ function FacilityDetailContent({ params }: { params: Promise<{ id: string }> }) 
   const [isCreatingGame, setIsCreatingGame] = useState(false);
   const [gameTitle, setGameTitle] = useState('');
   const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
-  const [selectedCreatorDays, setSelectedCreatorDays] = useState<number[]>([new Date().getDay()]);
   const [selectedCreatorCourts, setSelectedCreatorCourts] = useState<number[]>([]);
   const [gameSkill, setGameSkill] = useState<SkillLevel>(SkillLevel.INTERMEDIATE);
   const [gamePlayers, setGamePlayers] = useState(4);
@@ -109,7 +108,6 @@ function FacilityDetailContent({ params }: { params: Promise<{ id: string }> }) 
   const fetchData = async () => {
     if (isNaN(facilityId)) return;
     try {
-      // Fetch all relevant data for the venue
       const [fRes, cRes, gRes] = await Promise.all([
         getFacility(facilityId),
         getCourts(facilityId),
@@ -117,7 +115,6 @@ function FacilityDetailContent({ params }: { params: Promise<{ id: string }> }) 
       ]);
       setFacility(fRes.data);
       setCourts(cRes.data);
-      if (cRes.data.length > 0 && !selectedCourtId) setSelectedCourtId(cRes.data[0].id);
       if (cRes.data.length > 0 && selectedCreatorCourts.length === 0) setSelectedCreatorCourts([cRes.data[0].id]);
       setGames(gRes.data.filter(g => g.facility_id === facilityId));
 
@@ -213,7 +210,7 @@ function FacilityDetailContent({ params }: { params: Promise<{ id: string }> }) 
   };
 
   const handleRemoveGame = async (gameId: number) => {
-    if (!confirm("Remove this open play?")) return;
+    if (!confirm("Remove this session?")) return;
     try {
       await deleteGame(gameId);
       toast.success("Removed.");
@@ -281,7 +278,6 @@ function FacilityDetailContent({ params }: { params: Promise<{ id: string }> }) 
 
   return (
     <div className="min-h-screen bg-white text-[#0B0E14]">
-      {/* Sub-Nav */}
       <div className="bg-gray-50 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 h-12 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-400 hover:text-[#0B0E14]">
@@ -345,7 +341,6 @@ function FacilityDetailContent({ params }: { params: Promise<{ id: string }> }) 
           </div>
         </div>
 
-        {/* Creator logic same as before but uses selectedCreatorCourts ... */}
         {isCreatingGame && isManager && (
           <section className="mb-20 bg-[#0B0E14] p-12 rounded-[56px] text-white">
             <h3 className="text-3xl font-black uppercase tracking-tight mb-12 text-[#9EF01A]">Session Creator</h3>
@@ -370,22 +365,20 @@ function FacilityDetailContent({ params }: { params: Promise<{ id: string }> }) 
           </section>
         )}
 
-        {/* 7-DAY COURT TIMELINE (Unified View) */}
+        {/* 7-DAY INTEGRATED COURT TIMELINE (4 BOXES GRID) */}
         <div className="bg-white rounded-[48px] border border-gray-100 shadow-2xl overflow-hidden">
           <div className="p-10 bg-gray-50/50 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-8 text-black">
             <div className="flex flex-col gap-2">
-              <h2 className="text-3xl font-black tracking-tighter">Court Timeline</h2>
-              <div className="flex items-center gap-2">
-                {courts.map(c => (
-                  <button key={c.id} onClick={() => setSelectedCourtId(c.id)} className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${selectedCourtId === c.id ? 'bg-[#0B0E14] text-white' : 'bg-white border border-gray-200 text-gray-400'}`}>
-                    {c.name}
-                  </button>
-                ))}
+              <h2 className="text-3xl font-black tracking-tighter">7-Day Master Timeline</h2>
+              <div className="flex items-center gap-4 text-xs font-bold text-gray-400">
+                 <div className="flex items-center gap-1"><div className="w-2 h-2 bg-[#9EF01A] rounded-sm"/> Open Play</div>
+                 <div className="flex items-center gap-1"><div className="w-2 h-2 bg-gray-200 rounded-sm"/> Reserved</div>
+                 <div className="flex items-center gap-1"><div className="w-2 h-2 border border-dashed border-gray-300 rounded-sm"/> Available</div>
               </div>
             </div>
             <div className="flex items-center gap-4 bg-white p-3 rounded-2xl shadow-sm border border-gray-100">
               <CalendarIcon className="w-4 h-4 text-[#9EF01A]" />
-              <input type="date" className="bg-transparent font-black text-xs outline-none text-black" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              <input type="date" className="bg-transparent font-black text-xs outline-none text-black cursor-pointer" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
             </div>
           </div>
           
@@ -393,9 +386,9 @@ function FacilityDetailContent({ params }: { params: Promise<{ id: string }> }) 
             <table className="w-full border-collapse">
               <thead>
                 <tr>
-                  <th className="p-6 border-b border-r border-gray-50 text-left bg-white text-[10px] font-black uppercase text-gray-300 tracking-widest sticky left-0 z-10 w-24">Time</th>
+                  <th className="p-6 border-b border-r border-gray-50 text-left bg-white text-[10px] font-black uppercase text-gray-400 tracking-widest sticky left-0 z-10 w-24">Time</th>
                   {weekDates.map(d => (
-                    <th key={d} className="p-6 border-b border-gray-50 text-center bg-gray-50/50 min-w-[140px]">
+                    <th key={d} className="p-6 border-b border-gray-50 text-center bg-gray-50/50 min-w-[160px]">
                       <span className="text-[10px] font-black uppercase tracking-widest text-[#0B0E14]">{DAYS_OF_WEEK[new Date(d).getUTCDay()]}</span>
                       <p className="text-xs font-bold text-gray-400">{new Date(d).toLocaleDateString(undefined, {month:'short', day:'numeric'})}</p>
                     </th>
@@ -407,38 +400,41 @@ function FacilityDetailContent({ params }: { params: Promise<{ id: string }> }) 
                   <tr key={t} className="group">
                     <td className="p-6 border-b border-r border-gray-50 font-black text-gray-400 text-[10px] bg-gray-50/20 sticky left-0 z-10">{formatTimeAMPM(t)}</td>
                     {weekDates.map(d => {
-                      const openPlay = games.find(g => g.court_id === selectedCourtId && new Date(g.start_time).toISOString().startsWith(d) && new Date(g.start_time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', hour12:false}) === t);
-                      const booking = bookings.find(b => b.court_id === selectedCourtId && new Date(b.start_time).toISOString().startsWith(d) && new Date(b.start_time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', hour12:false}) === t);
-                      
                       return (
-                        <td key={`${d}-${t}`} className="p-2 border-b border-gray-50">
-                          {openPlay ? (
-                            <Link href={`/game/${openPlay.id}`} className="block bg-[#9EF01A] p-3 rounded-2xl text-[#0B0E14] relative group/item hover:scale-105 transition-all">
-                               <div className="flex justify-between items-start mb-1">
+                        <td key={`${d}-${t}`} className="p-2 border-b border-gray-50 align-top">
+                          <div className="grid grid-cols-2 gap-1.5 p-1">
+                            {courts.map((court, idx) => {
+                              const openPlay = games.find(g => g.court_id === court.id && new Date(g.start_time).toISOString().startsWith(d) && new Date(g.start_time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', hour12:false}) === t);
+                              const booking = bookings.find(b => b.court_id === court.id && new Date(b.start_time).toISOString().startsWith(d) && new Date(b.start_time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', hour12:false}) === t);
+                              
+                              if (openPlay) return (
+                                <Link key={court.id} href={`/game/${openPlay.id}`} className="aspect-square bg-[#9EF01A] rounded-lg flex items-center justify-center text-[#0B0E14] hover:scale-110 transition-all shadow-sm" title={`${court.name}: ${openPlay.title}`}>
                                   <Trophy className="w-3 h-3" />
-                                  {isManager && <button onClick={(e) => { e.preventDefault(); handleRemoveGame(openPlay.id); }} className="opacity-0 group-hover/item:opacity-100 text-black/40 hover:text-black"><Trash2 className="w-3 h-3" /></button>}
-                               </div>
-                               <p className="text-[8px] font-black uppercase tracking-tighter truncate">{openPlay.title}</p>
-                               <div className="flex justify-between items-center mt-2">
-                                  <span className="text-xs font-black">{openPlay.score_team_a || 0}:{openPlay.score_team_b || 0}</span>
-                                  <Users className="w-3 h-3 opacity-40" />
-                               </div>
-                            </Link>
-                          ) : booking ? (
-                            <div className="bg-gray-100 p-3 rounded-2xl border border-gray-200 flex flex-col items-center justify-center gap-1 relative group/item min-h-[80px]">
-                              <CheckCircle2 className="w-3 h-3 text-[#9EF01A]" />
-                              <span className="font-black text-[8px] uppercase truncate max-w-[80px] text-gray-400">{booking.user_id}</span>
-                              {(isManager || user?.id === booking.user_id) && (
-                                <button onClick={() => handleCancelBooking(booking.id)} className="opacity-0 group-hover/item:opacity-100 text-red-400 hover:text-red-600 transition-all absolute top-2 right-2">
-                                  <XCircle className="w-3 h-3" />
+                                </Link>
+                              );
+                              
+                              if (booking) return (
+                                <div key={court.id} className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center relative group/box" title={`${court.name}: Reserved`}>
+                                  <CheckCircle2 className="w-3 h-3 text-gray-300" />
+                                  {(isManager || user?.id === booking.user_id) && (
+                                    <button onClick={() => handleCancelBooking(booking.id)} className="absolute inset-0 bg-red-500/90 rounded-lg opacity-0 group-box/hover:opacity-100 flex items-center justify-center transition-opacity">
+                                      <XCircle className="w-3 h-3 text-white" />
+                                    </button>
+                                  )}
+                                </div>
+                              );
+
+                              return (
+                                <button key={court.id} onClick={() => handleBooking(court.id, d, t)} disabled={isManager} className="aspect-square border-2 border-dashed border-gray-100 rounded-lg flex items-center justify-center text-gray-200 hover:border-[#9EF01A] hover:bg-[#9EF01A]/5 hover:text-[#0B0E14] transition-all disabled:opacity-50" title={`${court.name}: Available`}>
+                                  <Plus className="w-3 h-3" />
                                 </button>
-                              )}
-                            </div>
-                          ) : (
-                            <button onClick={() => handleBooking(selectedCourtId!, d, t)} disabled={isManager} className={`w-full py-6 rounded-2xl border-2 border-dashed border-gray-100 text-gray-300 text-[8px] font-black uppercase tracking-widest hover:border-[#9EF01A] hover:bg-[#9EF01A]/5 hover:text-[#0B0E14] transition-all disabled:opacity-50`}>
-                              Book
-                            </button>
-                          )}
+                              );
+                            })}
+                            {/* Fallback if less than 4 courts to keep the "4 box" aesthetic or handle dynamically */}
+                            {Array.from({ length: Math.max(0, 4 - courts.length) }).map((_, i) => (
+                              <div key={`empty-${i}`} className="aspect-square bg-gray-50/50 rounded-lg border border-gray-50" />
+                            ))}
+                          </div>
                         </td>
                       );
                     })}
