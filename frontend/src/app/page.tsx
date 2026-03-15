@@ -2,8 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, MapPin, Calendar, Loader2, LayoutDashboard, Share2 } from 'lucide-react';
+import { Search, MapPin, Calendar, Loader2, LayoutDashboard, Share2, ExternalLink } from 'lucide-react';
 import { getFacilities, Facility } from './api/index';
+
+const formatTimeAMPM = (time24: string) => {
+  const [hours, minutes] = time24.split(':');
+  const h = parseInt(hours);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return `${h12}:${minutes} ${ampm}`;
+};
+
+const HeaderPlaceholder = () => (
+  <div className="h-16 bg-[#0B0E14] w-full" />
+);
 
 export default function Home() {
   const [facilities, setFacilities] = useState<Facility[]>([]);
@@ -41,7 +53,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white text-black">
       <main>
-        {/* Rendered Always for SSR Visibility & Integrity Guard */}
+        {/* Hero Section */}
         <section className="bg-[#0B0E14] text-white pt-20 pb-24 relative overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
             <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6 leading-tight">
@@ -84,10 +96,6 @@ export default function Home() {
                     : `${facilities.length} Active Locations`
                   }
                 </div>
-                <Link href="/schedule" className="flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-[#9EF01A] transition-colors">
-                  {isManager ? <LayoutDashboard className="w-4 h-4" /> : <Calendar className="w-4 h-4" />}
-                  {isManager ? "Go to Dashboard" : "View My Schedule"}
-                </Link>
               </div>
             )}
           </div>
@@ -112,51 +120,60 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
               {facilities
                 .filter(f => !isManager || f.manager_id === user.id)
-                .map((facility) => (
-                <Link 
-                  key={facility.id} 
-                  href={`/facility/${facility.id}`}
-                  className="group bg-white rounded-[32px] border border-gray-100 shadow-sm hover:shadow-xl transition-all overflow-hidden flex flex-col"
-                >
-                  <div className="aspect-[16/10] bg-gray-100 relative">
-                    <div className="absolute inset-0 bg-[#0B0E14]/5 group-hover:bg-transparent transition-colors" />
-                    {isManager && (
-                      <div className="absolute top-4 right-4 flex gap-2">
-                        <button 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            navigator.clipboard.writeText(`${window.location.origin}/facility/${facility.id}`);
-                            alert("Link copied!");
-                          }}
-                          className="bg-white/90 p-2 rounded-full text-[#0B0E14] hover:bg-[#9EF01A] transition-colors shadow-sm"
-                        >
-                          <Share2 className="w-4 h-4" />
-                        </button>
+                .map((facility) => {
+                  const googleMapsLink = facility.google_maps_url || 
+                    (facility.latitude && facility.longitude 
+                      ? `https://www.google.com/maps/search/?api=1&query=${facility.latitude},${facility.longitude}` 
+                      : null);
+
+                  return (
+                    <div 
+                      key={facility.id} 
+                      className="group bg-white rounded-[32px] border border-gray-100 shadow-sm hover:shadow-xl transition-all overflow-hidden flex flex-col"
+                    >
+                      <Link href={`/facility/${facility.id}`} className="aspect-[16/10] bg-gray-100 relative block">
+                        <div className="absolute inset-0 bg-[#0B0E14]/5 group-hover:bg-transparent transition-colors" />
+                        {facility.instagram_handle && (
+                          <div className="absolute top-4 right-4 bg-white/90 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider text-pink-600 shadow-sm">
+                            @{facility.instagram_handle}
+                          </div>
+                        )}
+                      </Link>
+                      <div className="p-8 flex-1 flex flex-col text-black">
+                        <Link href={`/facility/${facility.id}`}>
+                          <h3 className="text-2xl font-black text-[#0B0E14] mb-2 group-hover:text-[#9EF01A] transition-colors">
+                            {facility.name}
+                          </h3>
+                        </Link>
+                        
+                        <div className="flex items-center gap-4 mb-6">
+                          {googleMapsLink && (
+                            <a href={googleMapsLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#9EF01A] text-xs font-black uppercase tracking-widest hover:underline">
+                              <MapPin className="w-3.5 h-3.5" /> 
+                              Map Location
+                              <ExternalLink className="w-3 h-3 ml-1" />
+                            </a>
+                          )}
+                          <div className="text-gray-400 text-xs font-bold uppercase tracking-widest">
+                            {(facility as any).opening_time ? `${formatTimeAMPM((facility as any).opening_time)} - ${formatTimeAMPM((facility as any).closing_time)}` : '8 AM - 10 PM'}
+                          </div>
+                        </div>
+
+                        <p className="text-gray-500 text-sm leading-relaxed mb-8 flex-1 line-clamp-2 font-medium">
+                          {facility.description || 'Professional pickleball facility.'}
+                        </p>
+                        <div className="pt-6 border-t border-gray-50 flex items-center justify-between">
+                          <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">
+                            {isManager ? 'Control Center' : 'Verified Venue'}
+                          </span>
+                          <Link href={`/facility/${facility.id}`} className="bg-[#0B0E14] text-white px-5 py-2 rounded-xl text-xs font-black uppercase tracking-widest group-hover:bg-[#9EF01A] group-hover:text-[#0B0E14] transition-all">
+                            {isManager ? 'Manage' : 'Book Now'}
+                          </Link>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                  <div className="p-8 flex-1 flex flex-col text-black">
-                    <h3 className="text-2xl font-black text-[#0B0E14] mb-2 group-hover:text-[#9EF01A] transition-colors">
-                      {facility.name}
-                    </h3>
-                    <div className="flex items-center gap-1 text-gray-400 text-sm font-bold mb-6">
-                      <MapPin className="w-4 h-4" />
-                      <span>{facility.latitude ? `${facility.latitude}, ${facility.longitude}` : 'Nearby'}</span>
                     </div>
-                    <p className="text-gray-500 text-sm leading-relaxed mb-8 flex-1 line-clamp-2 font-medium">
-                      {facility.description || 'Professional pickleball facility.'}
-                    </p>
-                    <div className="pt-6 border-t border-gray-50 flex items-center justify-between">
-                      <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">
-                        {isManager ? 'Control Center' : 'Verified Venue'}
-                      </span>
-                      <span className="bg-[#0B0E14] text-white px-5 py-2 rounded-xl text-xs font-black uppercase tracking-widest group-hover:bg-[#9EF01A] group-hover:text-[#0B0E14] transition-all">
-                        {isManager ? 'Manage' : 'Book Now'}
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
+                  );
+                })}
             </div>
           )}
         </section>

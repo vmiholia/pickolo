@@ -53,7 +53,6 @@ const Header = () => {
         
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
           <Link href="/" className="hover:text-[#9EF01A] transition-colors">{isManager ? 'Venues' : 'Courts'}</Link>
-          <Link href="/schedule" className="hover:text-[#9EF01A] transition-colors">{isManager ? 'Analytics' : 'My Sessions'}</Link>
           <Link href="/leaderboard" className="flex items-center gap-1 hover:text-[#9EF01A] transition-colors">
             <Trophy className="w-4 h-4" /> Community
           </Link>
