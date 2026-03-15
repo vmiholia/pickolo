@@ -46,7 +46,7 @@ import {
   Zap
 } from 'lucide-react';
 
-const CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD'];
+const CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'INR'];
 const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 function FacilityDetailContent({ params }: { params: Promise<{ id: string }> }) {
@@ -278,7 +278,7 @@ function FacilityDetailContent({ params }: { params: Promise<{ id: string }> }) 
   if (!facility) return <div className="p-20 text-center font-bold text-black">Facility not found.</div>;
 
   const isManager = user?.id === facility.manager_id && user?.role === 'Manager';
-  const currencySymbol = facility.currency === 'USD' ? '$' : facility.currency === 'EUR' ? '€' : facility.currency === 'GBP' ? '£' : facility.currency;
+  const currencySymbol = facility.currency === 'USD' ? '$' : facility.currency === 'EUR' ? '€' : facility.currency === 'GBP' ? '£' : facility.currency === 'INR' ? '₹' : facility.currency;
 
   const startHour = parseInt(editOpening.split(':')[0]);
   const endHour = parseInt(editClosing.split(':')[0]);
