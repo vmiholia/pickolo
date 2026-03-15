@@ -10,7 +10,8 @@ This file defines the foundational protocols for all engineering tasks in the Pi
 1.  Run `npm run build` to ensure no regression in types or build configuration.
 2.  Perform a "Route Health Check" using `curl` on critical endpoints: `/`, `/facilities`, `/schedule`.
 3.  Verify that the rebranding (Pickolo branding, green logo) is still intact.
-4.  **Requirement:** If this skill fails, all other tasks are secondary to fixing the break.
+4.  **Sticky Check:** Ensure `sticky` classes are preserved on the facility schedule table (`thead` and `first column`).
+5.  **Requirement:** If this skill fails, all other tasks are secondary to fixing the break.
 
 ### 2. `pickolo-feature-sync` (The Documentation Skill)
 **Trigger:** After every successful verification of a new feature.

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8000';
+const API_URL = 'https://pickolo-b-final-vmiholia.loca.lt';
 
 const getApi = () => {
   return axios.create({
@@ -98,5 +98,6 @@ export const leaveGame = (gameId: number, userId: string) => getApi().delete(`/g
 export const getParticipants = (gameId: number) => getApi().get<User[]>(`/games/${gameId}/participants`);
 
 export const getLeaderboard = () => getApi().get<User[]>('/leaderboard');
+export const getFacilityLeaderboard = (facilityId: number) => getApi().get<User[]>(`/facilities/${facilityId}/leaderboard`);
 
 export default getApi();

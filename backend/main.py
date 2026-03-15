@@ -56,6 +56,19 @@ def get_user_schedule(user_id: str, db: Session = Depends(get_db)):
 def get_leaderboard(db: Session = Depends(get_db)):
     return db.query(models.User).filter(models.User.role == models.UserRole.PLAYER).order_by(desc(models.User.points)).all()
 
+@app.get("/facilities/{facility_id}/leaderboard", response_model=List[schemas.User])
+def get_facility_leaderboard(facility_id: int, db: Session = Depends(get_db)):
+    # Simple logic: return users who have joined games at this facility, ordered by points
+    game_ids = [g.id for g in db.query(models.Game).filter(models.Game.facility_id == facility_id).all()]
+    if not game_ids:
+        return []
+    
+    user_ids = [p.user_id for p in db.query(models.Participation).filter(models.Participation.game_id.in_(game_ids)).all()]
+    if not user_ids:
+        return []
+        
+    return db.query(models.User).filter(models.User.id.in_(user_ids)).order_by(desc(models.User.points)).all()
+
 # Facilities & Courts
 @app.get("/facilities", response_model=List[schemas.Facility])
 def get_facilities(search: Optional[str] = None, db: Session = Depends(get_db)):
@@ -72,10 +85,13 @@ def get_facility(facility_id: int, db: Session = Depends(get_db)):
     return facility
 
 @app.put("/facilities/{facility_id}", response_model=schemas.Facility)
-def update_facility(facility_id: int, facility_update: schemas.FacilityUpdate, db: Session = Depends(get_db)):
+def update_facility(facility_id: int, facility_update: schemas.FacilityUpdate, user_id: str = Query(...), db: Session = Depends(get_db)):
     facility = db.query(models.Facility).filter(models.Facility.id == facility_id).first()
     if not facility:
         raise HTTPException(status_code=404, detail="Facility not found")
+    
+    if facility.manager_id != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to manage this facility")
     
     update_data = facility_update.dict(exclude_unset=True)
     for key, value in update_data.items():
@@ -116,6 +132,16 @@ def get_bookings(facility_id: int, date: str = Query(...), db: Session = Depends
 
 @app.post("/bookings", response_model=schemas.Booking)
 def create_booking(booking: schemas.BookingCreate, db: Session = Depends(get_db)):
+    # Simple overlap check: check if there's already a booking for the same court and start_time
+    # Note: Bookings are fixed to 1-hour slots, so start_time must match exactly for now
+    existing = db.query(models.Booking).filter(
+        models.Booking.court_id == booking.court_id,
+        models.Booking.start_time == booking.start_time
+    ).first()
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="Court already booked for this time.")
+        
     db_booking = models.Booking(**booking.dict())
     db.add(db_booking)
     db.commit()

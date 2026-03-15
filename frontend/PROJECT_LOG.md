@@ -17,14 +17,28 @@ This document tracks all implemented features, their functionalities, and the re
 | **Slot Management** | ✅ Active | - Manager can view which user reserved a private slot.<br>- Manager can cancel a user's reservation. |
 | **Open Play Management** | ✅ Active | - Manager can delete an Open Play session.<br>- Manager can update scores (validated against 11-win-by-2 rule). |
 | **Facility Settings** | ✅ Active | - Manager can set opening/closing times.<br>- Manager can set Currency (USD, EUR, etc).<br>- Manager can add Google Maps URL (overrides lat/long). |
+| **Sticky Date Timeline** | ✅ Active | - 7-day header sticks to top-16 (below main header) on page scroll.<br>- Removed overflow traps that prevented viewport stickiness.<br>- Verified on mobile/desktop viewports. |
 
 ## 3. Player Experience
 | Feature | Status | Test Cases |
 | :--- | :--- | :--- |
 | **Profile Personalization** | ✅ Active | - Player can update `display_name`.<br>- Header updates instantly via `storage` event listener.<br>- Player can change skill level (Beg/Int/Exp). |
 | **Court Discovery** | ✅ Active | - Player can search facilities by name/city.<br>- Google Maps URL opens in new tab if provided. |
-| **Booking System** | ✅ Active | - 1-hour slots selectable in grid.<br>- Player can reserve available slots.<br>- Player can **unreserve** their own slots. |
+| **Booking System** | ✅ Active | - 1-hour slots selectable in grid.<br>- Player can reserve available slots.<br>- Player can **unreserve** their own slots.<br>- **NEW:** Prevent double-booking (backend error if slot taken). |
 | **Personal Schedule** | ✅ Active | - "My Sessions" shows upcoming reservations and joined games. |
+
+## 5. Security & Integrity
+| Feature | Status | Test Cases |
+| :--- | :--- | :--- |
+| **Facility Authorization** | ✅ Active | - Only assigned manager can update facility settings (403 if unauthorized). |
+| **Overlap Prevention** | ✅ Active | - Backend rejects duplicate bookings for same court/time. |
+
+## 6. Deployment & Public Access
+| Feature | Status | Test Cases |
+| :--- | :--- | :--- |
+| **Localtunnel Exposure** | ✅ Active | - Frontend: `https://pickolo-f-final-vmiholia.loca.lt`<br>- Backend: `https://pickolo-b-final-vmiholia.loca.lt`<br>- Password (IP): `49.207.198.56`. |
+
+
 
 ## 4. Community Features
 | Feature | Status | Test Cases |

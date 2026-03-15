@@ -366,8 +366,8 @@ function FacilityDetailContent({ params }: { params: Promise<{ id: string }> }) 
         )}
 
         {/* 7-DAY INTEGRATED COURT TIMELINE (4 BOXES GRID) */}
-        <div className="bg-white rounded-[48px] border border-gray-100 shadow-2xl overflow-hidden">
-          <div className="p-10 bg-gray-50/50 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-8 text-black">
+        <div className="bg-white rounded-[48px] border border-gray-100 shadow-2xl">
+          <div className="p-10 bg-gray-50 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-8 text-black">
             <div className="flex flex-col gap-2">
               <h2 className="text-3xl font-black tracking-tighter">7-Day Master Timeline</h2>
               <div className="flex items-center gap-4 text-xs font-bold text-gray-400">
@@ -382,13 +382,13 @@ function FacilityDetailContent({ params }: { params: Promise<{ id: string }> }) 
             </div>
           </div>
           
-          <div className="overflow-x-auto text-black">
-            <table className="w-full border-collapse">
-              <thead>
+          <div className="text-black overflow-x-auto overflow-y-visible">
+            <table className="min-w-full border-separate border-spacing-0 border-none">
+              <thead className="sticky top-[64px] z-30 bg-white">
                 <tr>
-                  <th className="p-6 border-b border-r border-gray-50 text-left bg-white text-[10px] font-black uppercase text-gray-400 tracking-widest sticky left-0 z-10 w-24">Time</th>
+                  <th className="p-6 border-b border-r border-gray-100 text-left bg-white text-[10px] font-black uppercase text-gray-400 tracking-widest sticky top-[64px] left-0 z-40 w-24">Time</th>
                   {weekDates.map(d => (
-                    <th key={d} className="p-6 border-b border-gray-50 text-center bg-gray-50/50 min-w-[160px]">
+                    <th key={d} className="p-6 border-b border-gray-100 text-center bg-gray-50 min-w-[160px] sticky top-[64px] z-30">
                       <span className="text-[10px] font-black uppercase tracking-widest text-[#0B0E14]">{DAYS_OF_WEEK[new Date(d).getUTCDay()]}</span>
                       <p className="text-xs font-bold text-gray-400">{new Date(d).toLocaleDateString(undefined, {month:'short', day:'numeric'})}</p>
                     </th>
@@ -398,7 +398,7 @@ function FacilityDetailContent({ params }: { params: Promise<{ id: string }> }) 
               <tbody>
                 {timeSlots.map(t => (
                   <tr key={t} className="group">
-                    <td className="p-6 border-b border-r border-gray-50 font-black text-gray-400 text-[10px] bg-gray-50/20 sticky left-0 z-10">{formatTimeAMPM(t)}</td>
+                    <td className="p-6 border-b border-r border-gray-100 font-black text-gray-400 text-[10px] bg-white sticky left-0 z-20">{formatTimeAMPM(t)}</td>
                     {weekDates.map(d => {
                       return (
                         <td key={`${d}-${t}`} className="p-2 border-b border-gray-50 align-top">
