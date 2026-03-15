@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-white text-[#0B0E14] font-sans antialiased;
+  }
+}
+
+:root {
+  --bg: #ffffff;
+  --text: #4b5563;
+  --text-h: #0B0E14;
+  --border: #E5E7EB;
+  --accent: #9EF01A;
+  --accent-bg: rgba(158, 240, 26, 0.1);
+}

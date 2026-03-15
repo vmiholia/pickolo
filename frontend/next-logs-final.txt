@@ -1,0 +1,52 @@
+
+> frontend@0.1.0 dev
+> next dev -p 3010
+
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/vmiholia/package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * /Users/vmiholia/pickleheads_clone/frontend/package-lock.json
+
+▲ Next.js 16.1.6 (Turbopack)
+- Local:         http://localhost:3010
+- Network:       http://192.168.1.27:3010
+
+✓ Starting...
+✓ Ready in 1444ms
+ HEAD /facilities 200 in 2000ms (compile: 1314ms, render: 686ms)
+ HEAD /facility/1 200 in 1951ms (compile: 1862ms, render: 89ms)
+ GET /facilities 200 in 81ms (compile: 6ms, render: 75ms)
+ GET / 200 in 689ms (compile: 266ms, render: 424ms)
+ GET /login 200 in 859ms (compile: 758ms, render: 101ms)
+ GET / 200 in 133ms (compile: 3ms, render: 131ms)
+ GET /login 200 in 221ms (compile: 8ms, render: 214ms)
+ GET / 200 in 257ms (compile: 8ms, render: 249ms)
+ GET /login 200 in 82ms (compile: 8ms, render: 74ms)
+ GET / 200 in 31ms (compile: 3ms, render: 29ms)
+ GET / 200 in 233ms (compile: 14ms, render: 219ms)
+ GET /schedule 200 in 977ms (compile: 804ms, render: 173ms)
+ GET /facilities 200 in 57ms (compile: 7ms, render: 50ms)
+ GET /facility/1 200 in 89ms (compile: 15ms, render: 74ms)
+ GET /facilities 200 in 28ms (compile: 4ms, render: 24ms)
+ GET /facility/1 200 in 90ms (compile: 8ms, render: 82ms)
+ GET /facilities 200 in 76ms (compile: 3ms, render: 73ms)
+ GET /facility/1 200 in 1961ms (compile: 1581ms, render: 380ms)
+ GET /facility/1 200 in 918ms (compile: 231ms, render: 687ms)
+ GET /facility/1 200 in 433ms (compile: 8ms, render: 425ms)
+ GET /facility/1 200 in 352ms (compile: 84ms, render: 268ms)
+ GET /facility/1 200 in 204ms (compile: 3ms, render: 200ms)
+ GET /facility/1 200 in 82ms (compile: 5ms, render: 76ms)
+ GET /facilities 200 in 355ms (compile: 70ms, render: 284ms)
+ GET /facility/1 200 in 42ms (compile: 7ms, render: 34ms)
+✓ Compiled in 124ms
+ GET /facilities 200 in 26ms (compile: 2ms, render: 24ms)
+ GET / 200 in 799ms (compile: 128ms, render: 671ms)
+ GET /schedule 200 in 346ms (compile: 77ms, render: 268ms)
+ GET / 200 in 22ms (compile: 3ms, render: 18ms)
+ GET / 200 in 18ms (compile: 2ms, render: 16ms)
+ GET / 200 in 21ms (compile: 3ms, render: 18ms)
+ GET /facilities 200 in 38ms (compile: 6ms, render: 32ms)
+ GET /facility/1 200 in 70ms (compile: 7ms, render: 63ms)
+[?25h
