@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'https://pickolo-b-final-vmiholia.loca.lt';
+const API_URL = 'http://localhost:8000';
 
 const getApi = () => {
   return axios.create({

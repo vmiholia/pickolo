@@ -33,13 +33,6 @@ This document tracks all implemented features, their functionalities, and the re
 | **Facility Authorization** | ✅ Active | - Only assigned manager can update facility settings (403 if unauthorized). |
 | **Overlap Prevention** | ✅ Active | - Backend rejects duplicate bookings for same court/time. |
 
-## 6. Deployment & Public Access
-| Feature | Status | Test Cases |
-| :--- | :--- | :--- |
-| **Localtunnel Exposure** | ✅ Active | - Frontend: `https://pickolo-f-final-vmiholia.loca.lt`<br>- Backend: `https://pickolo-b-final-vmiholia.loca.lt`<br>- Password (IP): `49.207.198.56`. |
-
-
-
 ## 4. Community Features
 | Feature | Status | Test Cases |
 | :--- | :--- | :--- |
